@@ -2,7 +2,7 @@ name: Deploy Design System (Versioned)
 
 on:
   push:
-    branches: [main]
+    branches: [master]
 
 jobs:
   deploy:

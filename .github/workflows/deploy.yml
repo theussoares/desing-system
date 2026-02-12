@@ -1,11 +1,13 @@
-name: Deploy Design System (Versioned)
+name: CI — Design System Remote
 
 on:
   push:
     branches: [master]
+  pull_request:
+    branches: [master]
 
 jobs:
-  deploy:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,22 +21,21 @@ jobs:
 
       - name: Read version
         id: version
-        run: echo "VERSION=$(node -e "console.log(require('./package.json').version)")" >> $GITHUB_OUTPUT
+        run: |
+          VERSION=$(node -e "console.log(require('./package.json').version)")
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "📦 Version: v$VERSION"
 
       - name: Build (versioned output)
         run: npm run build
 
-      - name: Verify versioned output
+      - name: Verify versioned artifact
         run: |
           VERSION="${{ steps.version.outputs.VERSION }}"
-          echo "📦 Built version: v${VERSION}"
+          echo "🔍 Checking dist/v${VERSION}/assets/remoteEntry.js"
+          test -f "dist/v${VERSION}/assets/remoteEntry.js" || { echo "❌ remoteEntry.js not found!"; exit 1; }
+          echo "✅ Versioned build verified: v${VERSION}"
           ls -la dist/v${VERSION}/assets/
-          test -f "dist/v${VERSION}/assets/remoteEntry.js" || exit 1
-          echo "✅ remoteEntry.js found at dist/v${VERSION}/assets/"
 
-      - name: Deploy to Vercel
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: npx vercel --prod --token $VERCEL_TOKEN --yes
+      # Deploy is handled automatically by Vercel GitHub Integration
+      # No token/secrets needed — Vercel watches this repo and deploys on push to master

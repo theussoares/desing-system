@@ -19,7 +19,7 @@ jobs:
 
       - name: Read version
         id: version
-        run: echo "VERSION=$(node -p 'require(\"./package.json\").version')" >> $GITHUB_OUTPUT
+        run: echo "VERSION=$(node -e "console.log(require('./package.json').version)")" >> $GITHUB_OUTPUT
 
       - name: Build (versioned output)
         run: npm run build
